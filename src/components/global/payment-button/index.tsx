@@ -1,27 +1,27 @@
-import { Button } from '@/components/ui/button'
-import React from 'react'
-import Loader from '../loader'
-// import { useSubscription } from '@/hooks/useSubscription'
+"use client"
+import { Button } from "@/components/ui/button";
+import React from "react";
+import Loader from "../loader";
+import { useSubscription } from '@/hooks/useSubscription'
 
-type Props = {}
+type Props = {};
 
 const PaymentButton = (props: Props) => {
-//   const { onSubscribe, isProcessing } = useSubscription()
+    const { onSubscribe, isProcessing } = useSubscription()
 
   return (
     <Button
       className="text-sm w-full "
-    //   onClick={onSubscribe}
+        onClick={onSubscribe}
     >
       <Loader
         color="#000"
-        state={false}
-        // state={isProcessing}
+        state={isProcessing}
       >
         Upgrade
       </Loader>
     </Button>
-  )
-}
+  );
+};
 
-export default PaymentButton
+export default PaymentButton;
