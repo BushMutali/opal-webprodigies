@@ -54,6 +54,7 @@ export type VideosProps = {
     createdAt: Date
     title: string | null
     source: string
+    views: number
   }[]
 }
 

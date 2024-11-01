@@ -3,6 +3,7 @@
 import { client } from "@/lib/prisma";
 import { currentUser } from "@clerk/nextjs/server";
 import { Video } from "lucide-react";
+import { sendEmail } from "./user";
 
 export const verifyAccessToWorkspace = async (workspaceId: string) => {
   try {
@@ -77,6 +78,7 @@ export const getAllUserVideos = async (workSpaceId: string) => {
         createdAt: true,
         source: true,
         processing: true,
+        views: true,
         Folder: {
           select: {
             id: true,
@@ -333,5 +335,74 @@ export const getPreviewVideo = async (VideoId: string) => {
     return { status: 404 };
   } catch (error) {
     return { status: 500 };
+  }
+};
+
+export const sendEmailForFirstView = async (videoId: string) => {
+  try {
+    const user = await currentUser();
+    if (!user) return { status: 404 };
+    const firstViewSettings = await client.user.findUnique({
+      where: { clerkid: user.id },
+      select: {
+        firstView: true,
+      },
+    });
+    if (!firstViewSettings?.firstView) return;
+
+    const video = await client.video.findUnique({
+      where: {
+        id: videoId,
+      },
+      select: {
+        title: true,
+        views: true,
+        User: {
+          select: {
+            email: true,
+          },
+        },
+      },
+    });
+    if (video && video.views === 0) {
+      await client.video.update({
+        where: {
+          id: videoId,
+        },
+        data: {
+          views: video.views + 1,
+        },
+      });
+
+      if (!video) return;
+      const { transporter, mailOptions } = await sendEmail(
+        video.User?.email!,
+        "You got a viewer",
+        `<p>Your video ${video.title} just got its first viewer</p>`
+      );
+
+      transporter.sendMail(mailOptions, async (error, info) => {
+        if (error) {
+          console.log("🔴", error.message);
+        } else {
+          console.log("✅ Email sent");
+          const notification = await client.user.update({
+            where: { clerkid: user.id },
+            data: {
+              notification: {
+                create: {
+                  content: mailOptions.text,
+                },
+              },
+            },
+          });
+          if (notification) {
+            return { status: 200 };
+          }
+        }
+      });
+    }
+  } catch (error) {
+    console.log(error);
   }
 };

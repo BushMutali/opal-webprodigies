@@ -1,14 +1,14 @@
 "use client";
-import { getPreviewVideo } from "@/actions/workspace";
+import { getPreviewVideo, sendEmailForFirstView } from "@/actions/workspace";
 import { useQueryData } from "@/hooks/useQueryData";
 import { VideoProps } from "@/types/index.type";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useEffect } from "react";
 import EditVideo from "../edit";
 import CopyLink from "../copy-link";
 import RichLink from "../rich-link";
-import { truncateString } from "@/lib/utils";
-import { Download } from "lucide-react";
+import { formatViews, truncateString } from "@/lib/utils";
+import { Dot, Download } from "lucide-react";
 import TabMenu from "../../tabs";
 import AiTools from "../../ai-tools";
 import VideoTranscript from "../../video-transcript";
@@ -21,9 +21,12 @@ type Props = {
 
 const VideoPreview = ({ videoId }: Props) => {
   const router = useRouter();
+
   const { data } = useQueryData(["preview-video"], () =>
     getPreviewVideo(videoId)
   );
+
+  const notifyFirstView = async () => await sendEmailForFirstView(videoId);
 
   const { data: video, status, author } = data as VideoProps;
   if (status !== 200) router.push("/");
@@ -31,6 +34,15 @@ const VideoPreview = ({ videoId }: Props) => {
   const daysAgo = Math.floor(
     (new Date().getTime() - video.createdAt.getTime()) / (24 * 60 * 60 * 1000)
   );
+
+  useEffect(() => {
+    if (video.views === 0) {
+      notifyFirstView();
+    }
+    return () => {
+      notifyFirstView();
+    };
+  }, []);
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 lg:py-10 overflow-y-auto gap-5">
@@ -52,7 +64,9 @@ const VideoPreview = ({ videoId }: Props) => {
             <p className="text-[#9D9D9D] capitalize">
               {video.User?.firstname} {video.User?.lastname}
             </p>
-            <p className="text-[#707070]">
+            <p className="text-[#707070] flex items-center">
+            {formatViews(video.views)} Views
+            <Dot />
               {daysAgo === 0 ? "Today" : `${daysAgo}d ago`}
             </p>
           </span>

@@ -6,7 +6,9 @@ import ChangeVideoLocation from "@/components/forms/change-video-location";
 import CopyLink from "./copy-link";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dot, Share2, User } from "lucide-react";
+import { Dot, Eye, Share2, User } from "lucide-react";
+
+import { formatViews } from "@/lib/utils";
 
 type Props = {
   User: {
@@ -24,6 +26,7 @@ type Props = {
   source: string;
   processing: boolean;
   workspaceId: string;
+  views: number;
 };
 
 const VideoCard = (props: Props) => {
@@ -78,6 +81,7 @@ const VideoCard = (props: Props) => {
                   {props.User?.firstname} {props.User?.lastname}
                 </p>
                 <p className="text-[#6d6b6b]  text-xs flex items-center ">
+                  {formatViews(props.views)} Views
                   <Dot /> {daysAgo === 0 ? "Today" : `${daysAgo}d ago`}
                 </p>
               </div>

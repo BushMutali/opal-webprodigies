@@ -376,7 +376,7 @@ export const inviteMembers = async (
           data: {
             notification: {
               create: {
-                content: `${user.firstName} ${user.lastName} invited ${senderInfo.firstname} into ${workspace.name}`,
+                content: `${user.firstName || ''} ${user.lastName || ''} invited ${senderInfo.firstname} into ${workspace.name}`,
               },
             },
           },
@@ -385,7 +385,7 @@ export const inviteMembers = async (
           const { transporter, mailOptions } = await sendEmail(
             email,
             "You got an invitation📨",
-            `You are invited to join ${workspace.name} Workspace, click accept to confirm`,
+            `<p>You are invited to join ${workspace.name} Workspace, click accept to confirm</p>`,
             `<a href="${process.env.NEXT_PUBLIC_HOST_URL}/invite/${invitation.id}" style="background-color: #000; padding: 5px 10px; border-radius: 10px; color: #fff">Accept Invite</a>`
           );
 
@@ -412,11 +412,11 @@ export const inviteMembers = async (
 
 export const acceptInvite = async (inviteId: string) => {
   try {
-    const user = await currentUser()
+    const user = await currentUser();
     if (!user)
       return {
         status: 404,
-      }
+      };
     const invitation = await client.invite.findUnique({
       where: {
         id: inviteId,
@@ -429,9 +429,9 @@ export const acceptInvite = async (inviteId: string) => {
           },
         },
       },
-    })
+    });
 
-    if (user.id !== invitation?.reciever?.clerkid) return { status: 401 }
+    if (user.id !== invitation?.reciever?.clerkid) return { status: 401 };
     const acceptInvite = client.invite.update({
       where: {
         id: inviteId,
@@ -439,7 +439,7 @@ export const acceptInvite = async (inviteId: string) => {
       data: {
         accepted: true,
       },
-    })
+    });
 
     const updateMember = client.user.update({
       where: {
@@ -452,19 +452,18 @@ export const acceptInvite = async (inviteId: string) => {
           },
         },
       },
-    })
+    });
 
     const membersTransaction = await client.$transaction([
       acceptInvite,
       updateMember,
-    ])
+    ]);
 
     if (membersTransaction) {
-      return { status: 200 }
+      return { status: 200 };
     }
-    return { status: 400 }
+    return { status: 400 };
   } catch (error) {
-    return { status: 400 }
+    return { status: 400 };
   }
-}
-
+};
