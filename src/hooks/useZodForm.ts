@@ -21,6 +21,6 @@ const useZodForm = (
 
   const onFormSubmit = handleSubmit(async (values) => mutation({ ...values }))
 
-  return { register, watch, reset, onFormSubmit, errors }
+  return { register, watch, reset, onFormSubmit, errors}
 }
 export default useZodForm

@@ -105,8 +105,8 @@ export const getNotifications = async () => {
 
 export const searchUsers = async (query: string) => {
   try {
-    const user = await currentUser()
-    if (!user) return { status: 404 }
+    const user = await currentUser();
+    if (!user) return { status: 404 };
 
     const users = await client.user.findMany({
       where: {
@@ -129,14 +129,175 @@ export const searchUsers = async (query: string) => {
         image: true,
         email: true,
       },
-    })
+    });
 
     if (users && users.length > 0) {
-      return { status: 200, data: users }
+      return { status: 200, data: users };
     }
 
-    return { status: 404, data: undefined }
+    return { status: 404, data: undefined };
   } catch (error) {
-    return { status: 500, data: undefined }
+    return { status: 500, data: undefined };
   }
-}
+};
+
+export const getPaymentInfo = async () => {
+  try {
+    const user = await currentUser();
+    if (!user) return { status: 404 };
+
+    const payment = await client.user.findUnique({
+      where: {
+        clerkid: user.id,
+      },
+      select: {
+        subscription: {
+          select: {
+            plan: true,
+          },
+        },
+      },
+    });
+
+    if (payment) {
+      return { status: 200, data: payment };
+    }
+
+    return { status: 404 };
+  } catch (error) {
+    return { status: 500 };
+  }
+};
+
+export const getFirstView = async () => {
+  try {
+    const user = await currentUser();
+    if (!user) return { status: 404 };
+    const userData = await client.user.findUnique({
+      where: {
+        clerkid: user.id,
+      },
+      select: {
+        firstView: true,
+      },
+    });
+    if (userData) {
+      return { status: 200, data: userData.firstView };
+    }
+    return { status: 400, data: false };
+  } catch (error) {
+    return { status: 400 };
+  }
+};
+
+export const enableFirstView = async (state: boolean) => {
+  try {
+    const user = await currentUser();
+
+    if (!user) return { status: 404 };
+
+    const view = await client.user.update({
+      where: {
+        clerkid: user.id,
+      },
+      data: {
+        firstView: state,
+      },
+    });
+
+    if (view) {
+      return { status: 200, data: "Setting updated" };
+    }
+  } catch (error) {
+    return { status: 400 };
+  }
+};
+
+export const getVideoComments = async (Id: string) => {
+  try {
+    const comments = await client.comment.findMany({
+      where: {
+        OR: [{ videoId: Id }, { commentId: Id }],
+        commentId: null,
+      },
+      include: {
+        reply: {
+          include: {
+            User: true,
+          },
+        },
+        User: true,
+      },
+    });
+
+      return { status: 200, data: comments }
+  } catch (error) {
+    return { status: 400 };
+  }
+};
+
+export const createCommentAndReply = async (
+  userId: string,
+  comment: string,
+  videoId: string,
+  commentId?: string | undefined
+) => {
+  try {
+    if (commentId) {
+      const reply = await client.comment.update({
+        where: {
+          id: commentId,
+        },
+        data: {
+          reply: {
+            create: {
+              comment,
+              userId,
+              videoId,
+            },
+          },
+        },
+      });
+      if (reply) {
+        return { status: 200, data: "Reply posted" };
+      }
+    }
+
+    const newComment = await client.video.update({
+      where: {
+        id: videoId,
+      },
+      data: {
+        Comment: {
+          create: {
+            comment,
+            userId,
+          },
+        },
+      },
+    });
+    if (newComment) return { status: 200, data: "New comment added" };
+  } catch (error) {
+    return { status: 400 };
+  }
+};
+
+export const getUserProfile = async () => {
+  try {
+    const user = await currentUser();
+    if (!user) return { status: 404 };
+    const profileIdAndImage = await client.user.findUnique({
+      where: {
+        clerkid: user.id,
+      },
+      select: {
+        image: true,
+        id: true,
+      },
+    });
+
+    if (profileIdAndImage) return { status: 200, data: profileIdAndImage };
+  } catch (error) {
+    return { status: 400 };
+  }
+};

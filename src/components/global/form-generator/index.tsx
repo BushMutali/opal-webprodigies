@@ -1,3 +1,4 @@
+"use client"
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import React from "react";
@@ -16,6 +17,8 @@ type Props = {
   name: string
   errors: FieldErrors<FieldValues>
   lines?: number
+  value?: string
+  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
 };
 
 const FormGenerator = ({
@@ -28,6 +31,8 @@ const FormGenerator = ({
   errors,
   type,
   lines,
+  value,
+  onChange,
 }: Props) => {
     switch (inputType) {
         case 'input':
@@ -43,6 +48,8 @@ const FormGenerator = ({
                 placeholder={placeholder}
                 className="bg-transparent border-themeGray text-themeTextGray"
                 {...register(name)}
+                value={value}
+                onChange={onChange}
               />
               <ErrorMessage
                 errors={errors}
