@@ -7,6 +7,7 @@ import { useMutationData } from "@/hooks/useMutationData";
 import React from "react";
 import Loader from "../loader";
 import { User } from "lucide-react";
+import { inviteMembers } from "@/actions/user";
 
 type Props = {
   workspaceId: string;
